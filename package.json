@@ -1,0 +1,27 @@
+{
+  "name": "web-proxy.js",
+  "version": "1.0.0",
+  "description": "simple web proxy written in nodejs",
+  "main": "web-proxy.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node web-proxy.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Einstrasse/web-proxy.js.git"
+  },
+  "keywords": [
+    "web",
+    "proxy"
+  ],
+  "author": "Einstrasse",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Einstrasse/web-proxy.js/issues"
+  },
+  "homepage": "https://github.com/Einstrasse/web-proxy.js#readme",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
+}
