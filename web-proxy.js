@@ -1,6 +1,7 @@
 const http = require('http');
 const https = require('https');
 const express = require('express');
+const { assert } = require('console');
 const app = express();
 const port = 3000;
 const hostname = `http://localhost:${port}`;
@@ -13,14 +14,20 @@ if (process.argv.length > 2) {
 let getRequest = (reqUrl, callback) => {
 	console.log(`[1] GET ${reqUrl}`);
 	let url = new URL(reqUrl);
+	
 	let client = '';
 	if (url.protocol === 'http:') {
 		client = http;
 	} else if (url.protocol === 'https:') {
 		client = https;
+	} else {
+		throw new Error("Unsupported protocol scheme");
 	}
+	console.log(`host = ${url.host}`);
+	console.log(`port = ${url.port}`);
+	console.log(`path = ${url.pathname + url.search}`);
 	client.get({
-		hostname: url.host,
+		hostname: url.hostname,
 		port: url.port,
 		path: url.pathname + url.search,
 		agent: false
@@ -57,6 +64,8 @@ let postRequest = (reqUrl, method, callback) => {
 		client = http;
 	} else if (url.protocol === 'https:') {
 		client = https;
+	} else {
+		throw new Error("Unsupported protocol scheme");
 	}
 	client.request({
 		hostname: url.host,
@@ -105,4 +114,4 @@ app.all('*', (req, res) => {
 
 app.listen(port, () => {
 	console.log(`Proxy app is listening at ${hostname} forwarding to ${DEST}`);
-})
+});
