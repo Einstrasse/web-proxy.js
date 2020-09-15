@@ -68,7 +68,7 @@ let postRequest = (reqUrl, method, callback) => {
 		throw new Error("Unsupported protocol scheme");
 	}
 	client.request({
-		hostname: url.host,
+		hostname: url.hostname,
 		port: url.port,
 		path: url.pathname,
 		method: method,
