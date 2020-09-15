@@ -6,6 +6,10 @@ const port = 3000;
 const hostname = `http://localhost:${port}`;
 let DEST = "http://notion.so";
 
+if (process.argv.length > 2) {
+	DEST = process.argv[2];
+}
+
 let getRequest = (reqUrl, callback) => {
 	console.log(`[1] GET ${reqUrl}`);
 	let url = new URL(reqUrl);
@@ -100,5 +104,5 @@ app.all('*', (req, res) => {
 });
 
 app.listen(port, () => {
-	console.log(`Proxy app is listening at ${hostname}`);
+	console.log(`Proxy app is listening at ${hostname} forwarding to ${DEST}`);
 })
