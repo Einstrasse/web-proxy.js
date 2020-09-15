@@ -11,9 +11,11 @@ if (process.argv.length > 2) {
 	DEST = process.argv[2];
 }
 
-let getRequest = (reqUrl, callback) => {
+let getRequest = (req, callback) => {
+	let reqUrl = `${DEST}${req.url}`;
 	console.log(`[1] GET ${reqUrl}`);
-	let url = new URL(reqUrl);
+
+	let url = new URL(`${reqUrl}`);
 	
 	let client = '';
 	if (url.protocol === 'http:') {
@@ -30,6 +32,7 @@ let getRequest = (reqUrl, callback) => {
 		hostname: url.hostname,
 		port: url.port,
 		path: url.pathname + url.search,
+		headers: req.headers,
 		agent: false
 	}, (res)=> {
 		let statusCode = res.statusCode;
@@ -44,7 +47,11 @@ let getRequest = (reqUrl, callback) => {
 					location += url.search;
 				}
 				console.log(`Redirection from ${reqUrl} to ... ${location}`);
-				getRequest(location, callback);
+				var redirUrl = new URL(location);
+				
+				getRequest({
+					url: redirUrl.pathname + redirUrl.search,
+				}, callback);
 				break;
 			default:
 				console.log(`Status Code is ${statusCode}`);
@@ -56,7 +63,9 @@ let getRequest = (reqUrl, callback) => {
 		console.error(e);
 	});
 };
-let postRequest = (reqUrl, method, callback) => {
+let postRequest = (req, callback) => {
+	let reqUrl = `${DEST}${req.url}`;
+	let method = req.method;
 	console.log(`[2] ${method} ${reqUrl}`);
 	let url = new URL(reqUrl);
 	let client = '';
@@ -72,6 +81,7 @@ let postRequest = (reqUrl, method, callback) => {
 		port: url.port,
 		path: url.pathname,
 		method: method,
+		headers: req.headers,
 		agent: false
 	}, (res)=> {
 		let statusCode = res.statusCode;
@@ -83,7 +93,11 @@ let postRequest = (reqUrl, method, callback) => {
 			case 3:
 				let location = res.headers.location;
 				console.log(`Redirection from ${reqUrl} to ... ${location}`);
-				postRequest(location, method, callback);
+				var redirUrl = new URL(location);
+				postRequest({
+					url: redirUrl.pathname + redirUrl.search,
+					method: method
+				}, callback);
 				break;
 			default:
 				console.log(`Status Code is ${statusCode}`);
@@ -96,18 +110,15 @@ let postRequest = (reqUrl, method, callback) => {
 	});
 };
 app.get('*', (req, res) => {
-	let path = req.path;
-	let url = req.url;
-	let userAgent = req.headers['user-agent'];
-	getRequest(`${DEST}${url}`, (d) => {
+	// getRequest(`${DEST}${url}`, (d) => {
+	getRequest(req, (d) => {
 		d.pipe(res);
 	});
 	
 });
 app.all('*', (req, res) => {
-	let path = req.path;
-	let method = req.method;
-	postRequest(`${DEST}${path}`, method, (d) => {
+	// postRequest(`${DEST}${path}`, method, (d) => {
+	postRequest(req, (d) => {
 		d.pipe(res);
 	});
 });
