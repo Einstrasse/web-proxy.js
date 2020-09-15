@@ -3,9 +3,11 @@ const https = require('https');
 const express = require('express');
 const app = express();
 const port = 3000;
-const DEST = "http://notion.so";
+const hostname = `http://localhost:${port}`;
+let DEST = "http://notion.so";
+
 let getRequest = (reqUrl, callback) => {
-	console.log(`GET ${reqUrl}`);
+	console.log(`[1] GET ${reqUrl}`);
 	let url = new URL(reqUrl);
 	let client = '';
 	if (url.protocol === 'http:') {
@@ -16,7 +18,7 @@ let getRequest = (reqUrl, callback) => {
 	client.get({
 		hostname: url.host,
 		port: url.port,
-		path: url.pathname,
+		path: url.pathname + url.search,
 		agent: false
 	}, (res)=> {
 		let statusCode = res.statusCode;
@@ -27,11 +29,15 @@ let getRequest = (reqUrl, callback) => {
 				break;
 			case 3:
 				let location = res.headers.location;
-				console.log(`Redirection to ...${location}`);
+				if (url.search) {
+					location += url.search;
+				}
+				console.log(`Redirection from ${reqUrl} to ... ${location}`);
 				getRequest(location, callback);
 				break;
 			default:
 				console.log(`Status Code is ${statusCode}`);
+				callback(res);
 				break;
 		}
 		
@@ -39,8 +45,8 @@ let getRequest = (reqUrl, callback) => {
 		console.error(e);
 	});
 };
-let postRequest = (reqUrl, callback) => {
-	console.log(`POST ${reqUrl}`);
+let postRequest = (reqUrl, method, callback) => {
+	console.log(`[2] ${method} ${reqUrl}`);
 	let url = new URL(reqUrl);
 	let client = '';
 	if (url.protocol === 'http:') {
@@ -52,7 +58,7 @@ let postRequest = (reqUrl, callback) => {
 		hostname: url.host,
 		port: url.port,
 		path: url.pathname,
-		method: "POST",
+		method: method,
 		agent: false
 	}, (res)=> {
 		let statusCode = res.statusCode;
@@ -63,11 +69,12 @@ let postRequest = (reqUrl, callback) => {
 				break;
 			case 3:
 				let location = res.headers.location;
-				console.log(`Redirection to ...${location}`);
-				getRequest(location, callback);
+				console.log(`Redirection from ${reqUrl} to ... ${location}`);
+				postRequest(location, method, callback);
 				break;
 			default:
 				console.log(`Status Code is ${statusCode}`);
+				callback(res);
 				break;
 		}
 		
@@ -77,19 +84,21 @@ let postRequest = (reqUrl, callback) => {
 };
 app.get('*', (req, res) => {
 	let path = req.path;
+	let url = req.url;
 	let userAgent = req.headers['user-agent'];
-	getRequest(`${DEST}${path}`, (d) => {
+	getRequest(`${DEST}${url}`, (d) => {
 		d.pipe(res);
 	});
 	
 });
-app.post('*', (req, res) => {
+app.all('*', (req, res) => {
 	let path = req.path;
-	postRequest(`${DEST}${path}`, (d) => {
+	let method = req.method;
+	postRequest(`${DEST}${path}`, method, (d) => {
 		d.pipe(res);
 	});
 });
 
 app.listen(port, () => {
-  console.log(`Proxy app listening at http://localhost:${port}`);
+	console.log(`Proxy app is listening at ${hostname}`);
 })
