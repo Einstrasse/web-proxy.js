@@ -5,14 +5,16 @@ const { assert } = require('console');
 const app = express();
 const port = 3000;
 const hostname = `http://localhost:${port}`;
-let DEST = "http://notion.so";
+let DEST = "http://naver.com";
+const getBody = require('raw-body');
 
 if (process.argv.length > 2) {
 	DEST = process.argv[2];
 }
 
 let getRequest = (req, callback) => {
-	let reqUrl = `${DEST}${req.url}`;
+
+	let reqUrl = req._url ? req._url : `${DEST}${req.url}`;
 	console.log(`[1] GET ${reqUrl}`);
 
 	let url = new URL(`${reqUrl}`);
@@ -25,9 +27,6 @@ let getRequest = (req, callback) => {
 	} else {
 		throw new Error("Unsupported protocol scheme");
 	}
-	console.log(`host = ${url.host}`);
-	console.log(`port = ${url.port}`);
-	console.log(`path = ${url.pathname + url.search}`);
 	client.get({
 		hostname: url.hostname,
 		port: url.port,
@@ -50,7 +49,8 @@ let getRequest = (req, callback) => {
 				var redirUrl = new URL(location);
 				
 				getRequest({
-					url: redirUrl.pathname + redirUrl.search,
+					// _url: redirUrl.pathname + redirUrl.search,
+					_url: location,
 				}, callback);
 				break;
 			default:
@@ -67,6 +67,7 @@ let postRequest = (req, callback) => {
 	let reqUrl = `${DEST}${req.url}`;
 	let method = req.method;
 	console.log(`[2] ${method} ${reqUrl}`);
+	console.log(`data = '${JSON.stringify(data)}'`);
 	let url = new URL(reqUrl);
 	let client = '';
 	if (url.protocol === 'http:') {
@@ -95,7 +96,8 @@ let postRequest = (req, callback) => {
 				console.log(`Redirection from ${reqUrl} to ... ${location}`);
 				var redirUrl = new URL(location);
 				postRequest({
-					url: redirUrl.pathname + redirUrl.search,
+					// _url: redirUrl.pathname + redirUrl.search,
+					_url: location,
 					method: method
 				}, callback);
 				break;
@@ -110,14 +112,12 @@ let postRequest = (req, callback) => {
 	});
 };
 app.get('*', (req, res) => {
-	// getRequest(`${DEST}${url}`, (d) => {
 	getRequest(req, (d) => {
 		d.pipe(res);
 	});
 	
 });
 app.all('*', (req, res) => {
-	// postRequest(`${DEST}${path}`, method, (d) => {
 	postRequest(req, (d) => {
 		d.pipe(res);
 	});
